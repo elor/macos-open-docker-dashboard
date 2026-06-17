@@ -1,4 +1,37 @@
-# Docker Desktop `docker-desktop://` deep-link routes
+# macos-open-docker-dashboard
+
+A one-shot macOS script that opens the Docker Desktop dashboard, starting the engine first if it isn't already running.
+
+`docker-desktop://` deep-links don't launch Docker Desktop when the engine is stopped — they're silently dropped. `docker-dashboard.sh` papers over that: it makes sure the engine is up, then deep-links straight to the dashboard.
+
+## Usage
+
+### Raycast
+
+The script is annotated for [Raycast script commands](https://manual.raycast.com/script-commands). Two ways to wire it up:
+
+- **Register this repo as a script directory.** Raycast → Extensions → Script Commands → Add Script Directory → pick this folder. Trigger **Docker Dashboard** from the Raycast root.
+- **Copy into an existing script directory.** Drop `docker-dashboard.sh` and `docker-icon.png` into a folder Raycast already watches (e.g. your default script-commands directory). Keep both files side-by-side — the script references the icon by relative name.
+
+### From the shell
+
+```sh
+./docker-dashboard.sh
+```
+
+Bind it to a hotkey via your launcher of choice, or symlink it into `$PATH`.
+
+## What the script does
+
+1. Checks `docker desktop status` for `Status running`.
+2. If the engine isn't running, runs `docker desktop start` (falling back to `open -a Docker` if the CLI subcommand isn't available), then polls every 0.5s until status reports running.
+3. Opens `docker-desktop://dashboard/open` to bring the dashboard window forward.
+
+Requires Docker Desktop on macOS. The `docker desktop` CLI subcommand ships with recent Docker Desktop versions; the `open -a Docker` fallback handles older installs.
+
+---
+
+## Technical details: Docker Desktop `docker-desktop://` deep-link routes
 
 Extracted from `/Applications/Docker.app/Contents/MacOS/Docker Desktop.app/Contents/Resources/app.asar` on macOS, Docker Desktop as installed 2026-06-17.
 
@@ -9,7 +42,7 @@ Two distinct layers exist:
 
 Empirically, `apps/...` and `logs` wake the window from a hidden state; `containers` does not — the SPA route exists but the main-process guard doesn't accept it as a wake-up trigger.
 
-## Routes
+### Routes
 
 ```
 dashboard/agents
@@ -76,7 +109,7 @@ dashboard/troubleshoot
 dashboard/volumes
 ```
 
-## Practical recipes
+### Practical recipes
 
 Just open the dashboard:
 
